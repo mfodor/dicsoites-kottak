@@ -1,6 +1,7 @@
 {title: SongTitle}
 {subtitle: Subtitle}
 {artist: SongArtist}
+{meta: Fordította: fordító}
 {original_key: G}
 {key: G}
 {tempo: 120}
