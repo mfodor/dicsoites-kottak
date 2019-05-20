@@ -1,1 +1,6 @@
-*.pdf
+/songs/*.pdf
+/convert/*
+!/convert/converter-*.js
+!/convert/package.json
+!/convert/package-lock.json
+!/convert/README.md
