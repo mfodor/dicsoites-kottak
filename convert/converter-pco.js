@@ -54,7 +54,7 @@ function getChordProFileContent(line, arrangement) {
 }
 
 let count = 0;
-fs.createReadStream('songs.csv')
+fs.createReadStream(file)
     .pipe(csv())
     .on('data', (line) => {
         let arrangement = 1;
