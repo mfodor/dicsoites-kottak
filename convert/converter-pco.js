@@ -1,6 +1,7 @@
 const csv = require('csv-parser');
 const fs = require('fs');
 const util = require('util');
+const path = require('path');
 
 const file = process.argv[2] || 'songs.csv';
 
@@ -63,7 +64,7 @@ fs.createReadStream(file)
             const arrangementName = line[util.format('Arrangement %d Name', arrangement)];
             const postfix = arrangementName === 'Normál' ? '' : '-' + arrangementName;
             const fileName = line.Title + postfix + '.cho';
-            fs.writeFile(dir + '/' + fileName, content, function(e) {
+            fs.writeFile(path.join(dir, fileName), content, function(e) {
                 if (e) {
                     console.error(e);
                 } else {
