@@ -5,10 +5,12 @@ const path = require('path');
 
 const file = process.argv[2] || 'songs.csv';
 
-const dir = 'convert ' + new Date().toISOString();
+const dir = 'convert-' + new Date().toISOString();
 if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
 }
+
+const defaultArrangementNames = ['Default Arrangement', 'Normál'];
 
 function getChordProFileContent(line, arrangement) {
     /* * * *
@@ -34,11 +36,17 @@ function getChordProFileContent(line, arrangement) {
         ...
     */
 
+    const prefix = util.format('Arrangement %d', arrangement);
+    const chart = line[util.format('%s Chord Chart', prefix)].replace(/\r\n/g, '\n');
+
+    if (!chart) {
+        return null;
+    }
+
     let contentLines = [];
     contentLines.push(util.format('{title: %s}', line.Title));
     line.CCLI && contentLines.push(util.format('{meta: CCLI %s}', line.CCLI));
 
-    const prefix = util.format('Arrangement %d', arrangement);
     contentLines.push(util.format('{key: %s}', line[util.format('%s Chord Chart Key', prefix)]));
     contentLines.push(util.format('{tempo: %s}', line[util.format('%s BPM', prefix)]));
     contentLines.push(util.format(
@@ -49,21 +57,31 @@ function getChordProFileContent(line, arrangement) {
 
     contentLines.push('\n');
 
-    contentLines.push(line[util.format('%s Chord Chart', prefix)]);
+    contentLines.push(chart);
+    contentLines.push('\n');
 
     return contentLines.join('\n');
 }
 
-let count = 0;
+let successCount = 0;
+let emptyCount = 0;
 fs.createReadStream(file)
     .pipe(csv())
     .on('data', (line) => {
-        let arrangement = 1;
-        while (line[util.format('Arrangement %d Name', arrangement)]) {
+        let arrangement = 0;
+        while (line[util.format('Arrangement %d Name', arrangement + 1)]) {
+            arrangement++;
             const content = getChordProFileContent(line, arrangement);
             const arrangementName = line[util.format('Arrangement %d Name', arrangement)];
-            const postfix = arrangementName === 'Normál' ? '' : '-' + arrangementName;
-            const fileName = line.Title + postfix + '.cho';
+            const postfix = defaultArrangementNames.includes(arrangementName) ? '' : '-' + arrangementName;
+            const fileName = (line.Title + postfix + '.cho').replace(/\//g, '-');
+
+            if (!content) {
+                console.log('No chord chart provided for %s', fileName);
+                emptyCount++;
+                continue;
+            }
+
             fs.writeFile(path.join(dir, fileName), content, function(e) {
                 if (e) {
                     console.error(e);
@@ -71,11 +89,17 @@ fs.createReadStream(file)
                     console.log('created: ' + fileName);
                 }
             });
-            arrangement++;
         }
 
-        count++;
+        successCount++;
     })
     .on('end', () => {
-        console.log('conversion of %d lines ended', count);
+        setTimeout(function() {
+            console.log(
+                'conversion of %d lines ended. Successful: %d, Empty: %d',
+                successCount + emptyCount,
+                successCount,
+                emptyCount
+            );
+        }, 1000);
     });
