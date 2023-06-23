@@ -13,6 +13,6 @@
   "author": "mfodor@doxasoft.hu",
   "license": "ISC",
   "dependencies": {
-    "csv-parser": "^2.3.0"
+    "csv-parser": "^2.3.5"
   }
 }
